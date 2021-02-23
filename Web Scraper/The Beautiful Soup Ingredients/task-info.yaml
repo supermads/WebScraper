@@ -48,5 +48,9 @@ files:
     \ == '__main__':\n    WebScraperTest('webscraper.scraper').run_tests()\n"
   learner_created: false
 feedback_link: https://hyperskill.org/projects/145/stages/782/implement#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations! Continue on <a href="https://hyperskill.org/projects/145/stages/782/implement">JetBrains
+    Academy</a>
+  time: Tue, 23 Feb 2021 20:46:52 UTC
+record: 2

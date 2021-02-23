@@ -1,4 +1,6 @@
-import requests
+import ast
+import re
+
 from hstest.check_result import CheckResult
 from hstest.stage_test import StageTest
 from hstest.test_case import TestCase
@@ -6,33 +8,49 @@ from hstest.test_case import TestCase
 
 class WebScraperTest(StageTest):
     def generate(self):
-        return [
-            TestCase(stdin="http://api.quotable.io/quotes/-CzNrWMGIg8V",
-                     check_function=self.check_valid_res),
+        return [TestCase(stdin="https://www.imdb.com/title/tt10048342/", check_function=self.check_queens_gambit,
+                         time_limit=50000),
+                TestCase(stdin="https://www.imdb.com/title/tt0068646/", check_function=self.check_godfather,
+                         time_limit=50000),
+                TestCase(stdin="https://www.imdb.com/name/nm0001191/", check_function=self.check_incorrect_url,
+                         time_limit=50000),
+                TestCase(stdin="https://www.google.com/", check_function=self.check_incorrect_url, time_limit=50000)]
 
-            TestCase(stdin="http://api.quotable.io/asdfgh",
-                     check_function=self.check_not_valid_res),
-
-            TestCase(stdin="http://api.quotable.io/authors",
-                     check_function=self.check_not_valid_res)
-        ]
-
-    def check_valid_res(self, reply, attach=None) -> CheckResult:
-        qod = requests.get("http://api.quotable.io/quotes/-CzNrWMGIg8V").json()["content"]
-        if qod in reply:
-            return CheckResult.correct()
-        elif isinstance(reply, str):
-            return CheckResult.wrong("Couldn't find the exact quote in the result.")
-        elif isinstance(reply, (list, dict)):
-            return CheckResult.wrong("Make sure you extracted the quote from the json body correctly.")
-        else:
-            return CheckResult.wrong("The result doesn't look like a quote... at all.")
-
-    def check_not_valid_res(self, reply, attach=None):
-        if all(x in reply.lower() for x in ("invalid", "resource")):
+    def check_incorrect_url(self, reply, attach=None):
+        if "Invalid movie page!" in reply:
             return CheckResult.correct()
         else:
-            return CheckResult.wrong("If the resource is invalid, the user should get informed exactly on this.")
+            return CheckResult.wrong("""If the link does not contain movie info or not an IMDB resource, 
+            please respond with 'Invalid movie page!' message!""")
+
+    def check_queens_gambit(self, reply, attach=None):
+        possible_descriptions = ["prodigious introvert Beth Harmon discovers and masters the game of chess"]
+        output = re.search('({.+})', reply)
+        if output is None:
+            return CheckResult.wrong("Output in the format of JSON was expected.\n"
+                                     "However, it was not found.")
+        reply_dict = ast.literal_eval(output.group(0))
+        user_description = reply_dict["description"]
+        correct_descriptions = sum([description.lower().strip() in user_description.lower().strip() for description in possible_descriptions]) > 0
+        if reply_dict["title"] == "The Queen's Gambit" and correct_descriptions:
+            return CheckResult.correct()
+        else:
+            return CheckResult.wrong("Title or description in returned dict do not seem to be correct.")
+
+    def check_godfather(self, reply, attach=None):
+        possible_descriptions = ["An organized crime dynasty's aging patriarch transfers control of his clandestine empire to his reluctant son",
+                                 "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son."]
+        reply_dict = ast.literal_eval(re.search('({.+})', reply).group(0))
+        title = reply_dict.get("title")
+        desc = reply_dict.get("description")
+        if not title or not desc:
+            return CheckResult.wrong("Seems like there is a title or a description missing in the output dictionary.")
+        user_description = reply_dict["description"]
+        correct_descriptions = sum([description.lower().strip() in user_description.lower().strip() for description in possible_descriptions]) > 0
+        if reply_dict["title"] == "The Godfather" and correct_descriptions:
+            return CheckResult.correct()
+        else:
+            return CheckResult.wrong("Title or description in returned dict do not seem to be correct.")
 
 
 if __name__ == '__main__':
