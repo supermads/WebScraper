@@ -55,6 +55,13 @@ files:
     if __name__ == '__main__':
         WebScraperTest('webscraper.scraper').run_tests()
   learner_created: false
+- name: source.html
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/145/stages/783/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations! Continue on <a href="https://hyperskill.org/projects/145/stages/783/implement">JetBrains
+    Academy</a>
+  time: Wed, 24 Feb 2021 22:01:08 UTC
 record: 3

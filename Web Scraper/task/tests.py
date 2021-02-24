@@ -1,6 +1,7 @@
 import ast
 import re
 
+import requests
 from hstest.check_result import CheckResult
 from hstest.stage_test import StageTest
 from hstest.test_case import TestCase
@@ -8,49 +9,39 @@ from hstest.test_case import TestCase
 
 class WebScraperTest(StageTest):
     def generate(self):
-        return [TestCase(stdin="https://www.imdb.com/title/tt10048342/", check_function=self.check_queens_gambit,
-                         time_limit=50000),
-                TestCase(stdin="https://www.imdb.com/title/tt0068646/", check_function=self.check_godfather,
-                         time_limit=50000),
-                TestCase(stdin="https://www.imdb.com/name/nm0001191/", check_function=self.check_incorrect_url,
-                         time_limit=50000),
-                TestCase(stdin="https://www.google.com/", check_function=self.check_incorrect_url, time_limit=50000)]
+        return [TestCase(stdin="https://github.blog/notexisting",
+                         check_function=self.check_not_200,
+                         attach="https://github.blog/notexisting", time_limit=0),
+                TestCase(stdin="http://httpstat.us/403",
+                         check_function=self.check_not_200,
+                         attach="http://httpstat.us/403", time_limit=0),
+                TestCase(
+                    stdin='http://www.pythonchallenge.com/pc/def/0.html',
+                    check_function=self.check_200,
+                    attach="http://www.pythonchallenge.com/pc/def/0.html", time_limit=0)]
 
-    def check_incorrect_url(self, reply, attach=None):
-        if "Invalid movie page!" in reply:
-            return CheckResult.correct()
-        else:
-            return CheckResult.wrong("""If the link does not contain movie info or not an IMDB resource, 
-            please respond with 'Invalid movie page!' message!""")
+    def check_200(self, reply, attach):
+        test_content = requests.get(attach).content
+        try:
+            with open("source.html", "rb") as f:
+                file_content = f.read()
+                if file_content == test_content:
+                    return CheckResult.correct() if "Content saved" in reply and "The URL returned" not in reply \
+                        else CheckResult.wrong("Did you notify the user you've saved the content?")
+                else:
+                    return CheckResult.wrong("The content of the file is not correct!")
+        except FileNotFoundError:
+            return CheckResult.wrong("Couldn't find the source.html file")
 
-    def check_queens_gambit(self, reply, attach=None):
-        possible_descriptions = ["prodigious introvert Beth Harmon discovers and masters the game of chess"]
-        output = re.search('({.+})', reply)
-        if output is None:
-            return CheckResult.wrong("Output in the format of JSON was expected.\n"
-                                     "However, it was not found.")
-        reply_dict = ast.literal_eval(output.group(0))
-        user_description = reply_dict["description"]
-        correct_descriptions = sum([description.lower().strip() in user_description.lower().strip() for description in possible_descriptions]) > 0
-        if reply_dict["title"] == "The Queen's Gambit" and correct_descriptions:
-            return CheckResult.correct()
+    def check_not_200(self, reply, attach):
+        status_code = requests.get(attach).status_code
+        if f"The URL returned" in reply and "Content saved" not in reply:
+            if str(status_code) in reply:
+                return CheckResult.correct()
+            else:
+                CheckResult.wrong("The returned error doesn't match with the output message.")
         else:
-            return CheckResult.wrong("Title or description in returned dict do not seem to be correct.")
-
-    def check_godfather(self, reply, attach=None):
-        possible_descriptions = ["An organized crime dynasty's aging patriarch transfers control of his clandestine empire to his reluctant son",
-                                 "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son."]
-        reply_dict = ast.literal_eval(re.search('({.+})', reply).group(0))
-        title = reply_dict.get("title")
-        desc = reply_dict.get("description")
-        if not title or not desc:
-            return CheckResult.wrong("Seems like there is a title or a description missing in the output dictionary.")
-        user_description = reply_dict["description"]
-        correct_descriptions = sum([description.lower().strip() in user_description.lower().strip() for description in possible_descriptions]) > 0
-        if reply_dict["title"] == "The Godfather" and correct_descriptions:
-            return CheckResult.correct()
-        else:
-            return CheckResult.wrong("Title or description in returned dict do not seem to be correct.")
+            return CheckResult.wrong("The link returned an error, but your program didn't.")
 
 
 if __name__ == '__main__':
