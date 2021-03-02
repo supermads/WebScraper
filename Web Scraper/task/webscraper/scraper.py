@@ -1,18 +1,41 @@
 import requests
+from bs4 import BeautifulSoup
+import string
 
 
-def write_page_to_file():
-    url = input("Input the URL:\n")
+def save_news_articles():
+    url = "https://www.nature.com/nature/articles"
     r = requests.get(url)
-    status_code = r.status_code
+    soup = BeautifulSoup(r.content, 'html.parser')
 
-    if status_code == 200:
-        with open("source.html", "wb") as f:
-            f.write(r.content)
-        print("Content saved.")
+    articles = soup.find_all("article")
+    saved_articles = []
 
-    else:
-        print(f"The URL returned {status_code}!")
+    for i in range(len(articles)):
+        article_type = articles[i].find("span", {"data-test": "article.type"}).text.strip()
+
+        if article_type == "News":
+            article_title = articles[i].find("h3", {"class": "c-card__title"}).text.strip().replace(" ", "_")
+
+            for char in article_title:
+                if char in string.punctuation and char != "_":
+                    article_title = article_title.replace(char, "")
+
+            file_name = f"{article_title}.txt"
+
+            body_link = articles[i].find("a", {"data-track-action": "view article"})
+            body_url = f"http://nature.com{body_link.get('href')}"
+
+            r = requests.get(body_url)
+            soup = BeautifulSoup(r.content, 'html.parser')
+
+            with open(file_name, "wb") as f:
+                body = soup.find("div", {"class": "article__body"}).text.strip()
+                f.write(body.encode("UTF-8"))
+
+            saved_articles.append(file_name)
+
+    print("Saved articles\n", saved_articles)
 
 
-write_page_to_file()
+save_news_articles()

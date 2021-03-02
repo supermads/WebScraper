@@ -40,8 +40,10 @@ files:
             origin_url = furl(url).origin
             articles_resp = requests.get(url)
             soup = BeautifulSoup(articles_resp.text, "html.parser")
+            articles = soup.find_all(self.tag_containing_atricle_type)
+            articles = list(filter(lambda x: x.text.strip() == article_type, articles))
             return [furl(origin_url).add(path=x.find_parent("article").find(self.tag_leading_to_view_article).get("href")).url \
-                             for x in list(filter(lambda x: x.text == article_type, soup.find_all(self.tag_containing_atricle_type)))]
+                             for x in articles]
 
         def get_article_title_and_content(self, url):
             article = requests.get(url)
@@ -73,8 +75,10 @@ files:
                     url = furl("https://www.nature.com/nature/articles").add({"page": str(i)})
                     article_links = scraper.get_article_links_of_type(url, article_type=article_type)
                     if len(txt_files) != len(article_links):
-                        return CheckResult.wrong("A wrong number of files with articles was found. \n"
-                                                 "{0} files were found, {1} files were expected.".format(txt_files, article_links))
+                        return CheckResult.wrong("A wrong number of files with articles was found in the directory {0}. \n"
+                                                 "{1} files were found, {2} files were expected.".format(dirname,
+                                                                                                         len(txt_files),
+                                                                                                         len(article_links)))
                     if article_links:
                         random_val = random.randint(0, len(article_links)-1)
                         title, content = scraper.get_article_title_and_content(article_links[random_val])
@@ -104,7 +108,7 @@ files:
 
 
     if __name__ == '__main__':
-        WebScraperTest('webscraper.scraper').run_tests()
+        WebScraperTest().run_tests()
   learner_created: false
 feedback_link: https://hyperskill.org/projects/145/stages/785/implement#comment
 status: Unchecked

@@ -37,8 +37,10 @@ files:
             origin_url = furl(url).origin
             articles_resp = requests.get(url)
             soup = BeautifulSoup(articles_resp.text, "html.parser")
+            articles = soup.find_all(self.tag_containing_atricle_type)
+            articles = list(filter(lambda x: x.text.strip() == article_type, articles))
             return [furl(origin_url).add(path=x.find_parent("article").find(self.tag_leading_to_view_article).get("href")).url \
-                             for x in list(filter(lambda x: x.text == article_type, soup.find_all(self.tag_containing_atricle_type)))]
+                             for x in articles]
 
         def get_article_title_and_content(self, url):
             article = requests.get(url)
@@ -62,7 +64,8 @@ files:
             article_links = scraper.get_article_links_of_type("https://www.nature.com/nature/articles")
             if len(txt_files) != len(article_links):
                 return CheckResult.wrong("A wrong number of files with articles was found. \n"
-                                         "{0} files were found, {1} files were expected.".format(txt_files, article_links))
+                                         "{0} files were found, {1} files were expected.".format(len(txt_files),
+                                                                                                 len(article_links)))
 
             title, content = scraper.get_article_title_and_content(article_links[random.randint(0, len(article_links)-1)])
             title = f"{title.translate(str.maketrans('', '', string.punctuation)).replace(' ', '_')}.txt"
@@ -88,8 +91,40 @@ files:
 
 
     if __name__ == '__main__':
-        WebScraperTest('webscraper.scraper').run_tests()
+        WebScraperTest().run_tests()
   learner_created: false
+- name: source.html
+  visible: true
+  text: |
+    <html>
+    <head>
+      <title>warming up</title>
+      <link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+    <center>
+    <img src="calc.jpg"><br>
+    <font color="gold">
+    <p>Hint: try to change the URL address.
+    </body>
+    </html>
+  learner_created: true
+- name: Taiwan_fines_researcher_for_allegedly_managing_projects_on_Chinese_mainland.txt
+  visible: true
+  learner_created: true
+- name: This_is_the_fastest_randomnumber_generator_ever_built.txt
+  visible: true
+  learner_created: true
+- name: Scientists_want_virtual_meetings_to_stay_after_the_COVID_pandemic.txt
+  visible: true
+  learner_created: true
+- name: COVID_research_updates_Just_one_dose_of_vaccine_protects_against_silent_COVID_infection.txt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/145/stages/784/implement#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations! Continue on <a href="https://hyperskill.org/projects/145/stages/784/implement">JetBrains
+    Academy</a>
+  time: Tue, 02 Mar 2021 21:10:36 UTC
+record: 4
