@@ -110,6 +110,38 @@ files:
     if __name__ == '__main__':
         WebScraperTest().run_tests()
   learner_created: false
+- name: source.html
+  visible: true
+  text: |
+    <html>
+    <head>
+      <title>warming up</title>
+      <link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+    <body>
+    <center>
+    <img src="calc.jpg"><br>
+    <font color="gold">
+    <p>Hint: try to change the URL address.
+    </body>
+    </html>
+  learner_created: true
+- name: Scientists_want_virtual_meetings_to_stay_after_the_COVID_pandemic.txt
+  visible: true
+  learner_created: true
+- name: This_is_the_fastest_randomnumber_generator_ever_built.txt
+  visible: true
+  learner_created: true
+- name: COVID_research_updates_Just_one_dose_of_vaccine_protects_against_silent_COVID_infection.txt
+  visible: true
+  learner_created: true
+- name: Taiwan_fines_researcher_for_allegedly_managing_projects_on_Chinese_mainland.txt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/145/stages/785/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations! Continue on <a href="https://hyperskill.org/projects/145/stages/785/implement">JetBrains
+    Academy</a>
+  time: Wed, 03 Mar 2021 20:06:22 UTC
 record: -1
